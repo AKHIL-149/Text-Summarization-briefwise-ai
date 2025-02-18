@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-Model Text Summarization</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Multi-Model Text Summarization Evaluation</h1>
+
+      <div class="content">
+        <!-- Input Box -->
+        <div class="input-section">
+          <h3>Input Text</h3>
+          <textarea
+            id="textInput"
+            placeholder="Enter your text here..."
+          ></textarea>
+          <button class="btn-primary" onclick="summarizeText()">
+            Summarize
+          </button>
+          <button class="btn-secondary" onclick="clearText()">Clear</button>
+        </div>
+
+        <!-- Model Summaries  -->
+        <div class="output-section">
+          <div class="output-box">
+            <h3>BART Summary</h3>
+            <p id="bartSummary">Your summary will appear here...</p>
+            <p class="score">ROUGE Score: <span id="bartScore">-</span></p>
+          </div>
+
+          <div class="output-box">
+            <h3>T5 Summary</h3>
+            <p id="t5Summary">Your summary will appear here...</p>
+            <p class="score">ROUGE Score: <span id="t5Score">-</span></p>
+          </div>
+
+          <div class="output-box">
+            <h3>Pegasus Summary</h3>
+            <p id="pegasusSummary">Your summary will appear here...</p>
+            <p class="score">ROUGE Score: <span id="pegasusScore">-</span></p>
+          </div>
+        </div>
+
+        <!-- Similarity Scores  -->
+        <div class="similarity-section">
+          <h3>TF-IDF Scores</h3>
+          <p>BART vs T5: <span id="similarityBartT5TF">-</span></p>
+          <p>BART vs Pegasus: <span id="similarityBartPegasusTF">-</span></p>
+          <p>T5 vs Pegasus: <span id="similarityT5PegasusTF">-</span></p>
+        </div>
+
+        <div class="similarity-section">
+          <h3> Sentence - BERT Scores</h3>
+          <p>BART vs T5: <span id="cosineBartT5TF">-</span></p>
+          <p>BART vs Pegasus: <span id="cosineBartPegasusTF">-</span></p>
+          <p>T5 vs Pegasus: <span id="cosineT5PegasusTF">-</span></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
