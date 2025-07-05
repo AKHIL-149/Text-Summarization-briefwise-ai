@@ -1,3 +1,10 @@
-streamlit
 flask
 flask-cors
+streamlit
+transformers
+torch
+evaluate
+nltk
+scikit-learn
+sentence-transformers
+numpy
