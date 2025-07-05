@@ -1,4 +1,114 @@
+import streamlit as st
+from transformers import (
+    BartForConditionalGeneration,
+    BartTokenizer,
+    T5ForConditionalGeneration,
+    T5Tokenizer,
+    PegasusForConditionalGeneration,
+    PegasusTokenizer,
+)
+from rouge_score import rouge_scorer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer, util
+import torch
+import nltk
 
+# Download NLTK punkt tokenizer
+nltk.download("punkt")
+
+st.set_page_config(page_title="Multi-Model Text Summarization", layout="wide")
+
+st.title("Multi-Model Text Summarization Evaluation")
+
+# ============================
+# Load models ONCE (cached)
+# ============================
+
+@st.cache_resource
+def load_models():
+    models = {
+        "bart": {
+            "model": BartForConditionalGeneration.from_pretrained("facebook/bart-large-cnn"),
+            "tokenizer": BartTokenizer.from_pretrained("facebook/bart-large-cnn"),
+        },
+        "t5": {
+            "model": T5ForConditionalGeneration.from_pretrained("t5-small"),
+            "tokenizer": T5Tokenizer.from_pretrained("t5-small"),
+        },
+        "pegasus": {
+            "model": PegasusForConditionalGeneration.from_pretrained("google/pegasus-xsum"),
+            "tokenizer": PegasusTokenizer.from_pretrained("google/pegasus-xsum"),
+        },
+    }
+    return models
+
+@st.cache_resource
+def load_bert():
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+models = load_models()
+bert_model = load_bert()
+
+rouge_scorer_obj = rouge_scorer.RougeScorer(["rouge1"], use_stemmer=True)
+
+# ============================
+# Summarization function
+# ============================
+
+def generate_summary(model_name, text):
+    tokenizer = models[model_name]["tokenizer"]
+    model = models[model_name]["model"]
+
+    inputs = tokenizer.encode(
+        text, return_tensors="pt", max_length=1024, truncation=True
+    )
+
+    if inputs.shape[1] == 0:
+        return "Error: Input too short to summarize."
+
+    summary_ids = model.generate(
+        inputs,
+        max_length=50,
+        min_length=20,
+        num_beams=7,
+        repetition_penalty=1.2,
+        early_stopping=True,
+    )
+
+    return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+# ============================
+# Metrics functions
+# ============================
+
+def calculate_rouge(reference, generated_summary):
+    scores = rouge_scorer_obj.score(reference, generated_summary)
+    rouge1_fmeasure = scores["rouge1"].fmeasure
+    return round(float(rouge1_fmeasure), 4)
+
+def calculate_similarity_tfidf(summaries):
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(summaries.values())
+    cosine_similarities = cosine_similarity(tfidf_matrix)
+    
+    return {
+        "bart_t5": round(cosine_similarities[0, 1], 4),
+        "bart_pegasus": round(cosine_similarities[0, 2], 4),
+        "t5_pegasus": round(cosine_similarities[1, 2], 4),
+    }
+
+def calculate_similarity_bert(summaries):
+    embeddings = {
+        model: bert_model.encode(summary, convert_to_tensor=True)
+        for model, summary in summaries.items()
+    }
+    bert_similarities = {
+        "bart_t5": round(util.pytorch_cos_sim(embeddings["bart"], embeddings["t5"]).item(), 4),
+        "bart_pegasus": round(util.pytorch_cos_sim(embeddings["bart"], embeddings["pegasus"]).item(), 4),
+        "t5_pegasus": round(util.pytorch_cos_sim(embeddings["t5"], embeddings["pegasus"]).item(), 4),
+    }
+    return bert_similarities
 
 
 
