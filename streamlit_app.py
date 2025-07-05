@@ -1,109 +1,113 @@
 import streamlit as st
 import requests
 
-# Set page config
 st.set_page_config(page_title="Multi-Model Text Summarization", layout="wide")
 
-# Apply some custom CSS for styling
-st.markdown("""
-    <style>
-    .big-title {
-        font-size:36px !important;
-        font-weight: bold;
-        margin-bottom: 25px;
-    }
-    .section-box {
-        border: 2px solid #4CAF50;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        background-color: #f9f9f9;
-    }
-    .summary-box {
-        border: 1px solid #999;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        background-color: #ffffff;
-    }
-    .score {
-        color: #007ACC;
-        font-weight: bold;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.title("Multi-Model Text Summarization Evaluation")
 
-# ---- PAGE TITLE ----
-st.markdown('<div class="big-title">Multi-Model Text Summarization Evaluation</div>', unsafe_allow_html=True)
+# Create 3 columns
+col1, col2, col3 = st.columns([1, 1, 1])
 
+# --------------------------
+# LEFT COLUMN — INPUT BOX
+# --------------------------
 
-# ==============
-# INPUT SECTION
-# ==============
-with st.container():
-    st.markdown('<div class="section-box">', unsafe_allow_html=True)
-    
+with col1:
     st.subheader("Input Text")
-    text_input = st.text_area("Enter your text here...", height=200, label_visibility="collapsed")
     
-    col1, col2 = st.columns([1, 1])
-    summarize_btn = col1.button("Summarize", type="primary")
-    clear_btn = col2.button("Clear")
-
-    if clear_btn:
+    # Text input box
+    text_input = st.text_area(
+        "Enter your text here...",
+        height=200,
+        label_visibility="collapsed"
+    )
+    
+    # Buttons
+    submit = st.button("Summarize", use_container_width=True)
+    clear = st.button("Clear", use_container_width=True)
+    
+    if clear:
         st.experimental_rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
+# --------------------------
+# MIDDLE COLUMN — SUMMARIES
+# --------------------------
 
+bart_summary = "Your summary will appear here..."
+t5_summary = "Your summary will appear here..."
+pegasus_summary = "Your summary will appear here..."
 
-# ============================
-# OUTPUT SECTION (conditional)
-# ============================
-if summarize_btn and text_input.strip():
+bart_rouge = "-"
+t5_rouge = "-"
+pegasus_rouge = "-"
+
+similarity_tfidf = {
+    "bart_t5": "-",
+    "bart_pegasus": "-",
+    "t5_pegasus": "-"
+}
+
+similarity_bert = {
+    "bart_t5": "-",
+    "bart_pegasus": "-",
+    "t5_pegasus": "-"
+}
+
+if submit and text_input.strip():
     # Call Flask API
     try:
         response = requests.post(
-            "http://localhost:5100/api/summarize",
-            json={"text": text_input.strip()}
+            "http://localhost:5100/api/summarize",  # CHANGE THIS for production
+            json={"text": text_input},
+            timeout=60
         )
-        response.raise_for_status()
-        result = response.json()
-
-        # Summaries
-        summaries = result.get("summaries", {})
-        rouge_scores = result.get("rouge_scores", {})
-        similarity_tfidf = result.get("similarity_tfidf", {})
-        similarity_bert = result.get("similarity_bert", {})
-
-        with st.container():
-            st.markdown('<div class="section-box">', unsafe_allow_html=True)
+        if response.status_code == 200:
+            data = response.json()
             
-            st.subheader("Model Summaries")
-
-            # Individual summary boxes
-            for model_name in ["bart", "t5", "pegasus"]:
-                st.markdown(f"""
-                    <div class="summary-box">
-                        <h3>{model_name.upper()} Summary</h3>
-                        <p>{summaries.get(model_name, "No summary returned.")}</p>
-                        <p class="score">ROUGE Score: {rouge_scores.get(model_name, "-")}</p>
-                    </div>
-                """, unsafe_allow_html=True)
-
-            st.subheader("TF-IDF Similarity Scores")
-            st.write(f"BART vs T5: {similarity_tfidf.get('bart_t5', '-')}")
-            st.write(f"BART vs Pegasus: {similarity_tfidf.get('bart_pegasus', '-')}")
-            st.write(f"T5 vs Pegasus: {similarity_tfidf.get('t5_pegasus', '-')}")
-
-            st.subheader("Sentence-BERT Similarity Scores")
-            st.write(f"BART vs T5: {similarity_bert.get('bart_t5', '-')}")
-            st.write(f"BART vs Pegasus: {similarity_bert.get('bart_pegasus', '-')}")
-            st.write(f"T5 vs Pegasus: {similarity_bert.get('t5_pegasus', '-')}")
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    except requests.RequestException as e:
+            bart_summary = data["summaries"]["bart"]
+            t5_summary = data["summaries"]["t5"]
+            pegasus_summary = data["summaries"]["pegasus"]
+            
+            bart_rouge = data["rouge_scores"]["bart"]
+            t5_rouge = data["rouge_scores"]["t5"]
+            pegasus_rouge = data["rouge_scores"]["pegasus"]
+            
+            similarity_tfidf = data["similarity_tfidf"]
+            similarity_bert = data["similarity_bert"]
+            
+        else:
+            st.error(f"API returned error: {response.text}")
+    except Exception as e:
         st.error(f"API call failed: {e}")
-else:
-    if summarize_btn:
-        st.warning("Please enter some text to summarize.")
+
+with col2:
+    st.subheader("BART Summary")
+    st.write(bart_summary)
+    st.write(f"**ROUGE Score:** {bart_rouge}")
+
+    st.subheader("T5 Summary")
+    st.write(t5_summary)
+    st.write(f"**ROUGE Score:** {t5_rouge}")
+
+    st.subheader("Pegasus Summary")
+    st.write(pegasus_summary)
+    st.write(f"**ROUGE Score:** {pegasus_rouge}")
+
+# --------------------------
+# RIGHT COLUMN — SCORES
+# --------------------------
+
+with col3:
+    # TF-IDF
+    st.subheader("TF-IDF Scores", divider="gray")
+    st.write(f"BART vs T5: **{similarity_tfidf['bart_t5']}**")
+    st.write(f"BART vs Pegasus: **{similarity_tfidf['bart_pegasus']}**")
+    st.write(f"T5 vs Pegasus: **{similarity_tfidf['t5_pegasus']}**")
+    
+    st.markdown("---")
+    
+    # BERT
+    st.subheader("Sentence - BERT Scores", divider="gray")
+    st.write(f"BART vs T5: **{similarity_bert['bart_t5']}**")
+    st.write(f"BART vs Pegasus: **{similarity_bert['bart_pegasus']}**")
+    st.write(f"T5 vs Pegasus: **{similarity_bert['t5_pegasus']}**")
