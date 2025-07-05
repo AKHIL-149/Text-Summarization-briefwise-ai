@@ -1,14 +1,9 @@
 streamlit
-flask
-flask-cors
-transformers
 torch
+transformers
+rouge-score
 nltk
 scikit-learn
 sentence-transformers
 numpy
-rouge-score
-absl-py
-evaluate
-requests
 sentencepiece
