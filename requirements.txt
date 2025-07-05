@@ -11,3 +11,4 @@ rouge-score
 absl-py
 evaluate
 requests
+sentencepiece
