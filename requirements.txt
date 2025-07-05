@@ -6,4 +6,4 @@ nltk
 scikit-learn
 sentence-transformers
 numpy
-sentencepiece
+sentencepiece==0.2.0
