@@ -9,3 +9,4 @@ sentence-transformers
 numpy
 rouge-score
 absl-py
+evaluate
