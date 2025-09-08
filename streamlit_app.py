@@ -1,6 +1,5 @@
 import streamlit as st
 import nltk
-import os
 from huggingface_hub import login
 from transformers import (
     BartForConditionalGeneration,
@@ -15,16 +14,18 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer, util
 
-# 🔐 Hugging Face Login to prevent rate limiting (HTTP 429)
-hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+# 🔐 Login to Hugging Face using Streamlit Secrets
+hf_token = st.secrets.get("HUGGINGFACE_TOKEN")  # ✅ Replaced os.environ.get()
 if hf_token:
     login(hf_token)
+else:
+    st.warning("⚠️ Hugging Face token not found. You may hit rate limits.")
 
 # 📥 Download NLTK punkt tokenizer
 nltk.download("punkt")
 
 # ------------------------------------------------
-# Load Models Once (slow, so cache them)
+# Load Models Once (cached)
 # ------------------------------------------------
 
 @st.cache_resource
@@ -32,17 +33,14 @@ def load_models():
     models = {}
     cache_dir = "./hf_models"
 
-    # BART
     bart_model = BartForConditionalGeneration.from_pretrained("facebook/bart-large-cnn", cache_dir=cache_dir)
     bart_tokenizer = BartTokenizer.from_pretrained("facebook/bart-large-cnn", cache_dir=cache_dir)
     models["bart"] = {"model": bart_model, "tokenizer": bart_tokenizer}
 
-    # T5
     t5_model = T5ForConditionalGeneration.from_pretrained("t5-small", cache_dir=cache_dir)
     t5_tokenizer = T5Tokenizer.from_pretrained("t5-small", cache_dir=cache_dir)
     models["t5"] = {"model": t5_model, "tokenizer": t5_tokenizer}
 
-    # Pegasus
     pegasus_model = PegasusForConditionalGeneration.from_pretrained("google/pegasus-xsum", cache_dir=cache_dir)
     pegasus_tokenizer = PegasusTokenizer.from_pretrained("google/pegasus-xsum", cache_dir=cache_dir)
     models["pegasus"] = {"model": pegasus_model, "tokenizer": pegasus_tokenizer}
