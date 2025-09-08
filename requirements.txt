@@ -1,9 +1,9 @@
 streamlit
-torch
-transformers
-rouge-score
 nltk
-scikit-learn
+torch==2.2.2
+transformers==4.41.1
+sentencepiece
 sentence-transformers
-numpy
-sentencepiece>=0.2.0,<1.0.0
+rouge-score
+scikit-learn
+huggingface-hub
