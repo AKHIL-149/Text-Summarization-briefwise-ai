@@ -74,3 +74,4 @@ instance/
 
 # Heroku
 .heroku/nltk.txt
+bin/
