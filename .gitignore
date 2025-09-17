@@ -73,4 +73,4 @@ instance/
 .webassets-cache
 
 # Heroku
-.heroku/
+.heroku/nltk.txt
