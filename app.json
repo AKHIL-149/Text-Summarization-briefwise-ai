@@ -1,0 +1,29 @@
+{
+  "name": "Multi-Model Text Summarization",
+  "description": "A web application for generating and evaluating text summaries using BART, T5, and Pegasus models",
+  "repository": "https://github.com/Yaswanth-pati/Text-Summarization",
+  "logo": "https://cdn.jsdelivr.net/npm/simple-icons@v3/icons/heroku.svg",
+  "keywords": ["python", "flask", "streamlit", "nlp", "transformers", "summarization"],
+  "stack": "heroku-20",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "standard-2x"
+    }
+  },
+  "env": {
+    "HUGGINGFACE_TOKEN": {
+      "description": "Optional: HuggingFace API token to avoid rate limits",
+      "required": false
+    },
+    "FLASK_ENV": {
+      "value": "production"
+    }
+  },
+  "addons": []
+}

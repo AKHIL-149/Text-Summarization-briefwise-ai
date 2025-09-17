@@ -1,6 +1,6 @@
 streamlit
 nltk
-numpy
+numpy<2.0.0
 torch==2.2.2
 transformers==4.41.1
 sentencepiece
@@ -8,4 +8,5 @@ sentence-transformers
 rouge-score
 scikit-learn
 huggingface-hub
-numpy<2.0.0  # 🔧 prevent crashing due to PyTorch incompatibility
+flask
+flask-cors

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "-----> Downloading NLTK data..."
+python -c "import nltk; nltk.download('punkt')"
+
+echo "-----> Post-compile script completed"
